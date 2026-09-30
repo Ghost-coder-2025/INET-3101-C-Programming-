@@ -1,0 +1,178 @@
+
+a) Outbound Flight
+b) Inbound Flight
+c) Quit
+Choice: Invalid choice.
+
+a) Outbound Flight
+b) Inbound Flight
+c) Quit
+Choice: 
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Empty seats: 24
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Empty seats: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number (blank to cancel): Last name (blank to cancel): First name (blank to cancel): Seat 1 assigned.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number (blank to cancel): Seat 1 is already assigned.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number (blank to cancel): Last name (blank to cancel): First name (blank to cancel): Seat 2 assigned.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number to delete (blank to cancel): Seat 3 is not assigned.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number (blank to cancel): 
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number to delete (blank to cancel): 
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number (blank to cancel): Last name (blank to cancel): First name (blank to cancel): 
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number (blank to cancel): Invalid seat number.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number (blank to cancel): Invalid seat number.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Invalid choice.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Invalid choice.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: 
+a) Outbound Flight
+b) Inbound Flight
+c) Quit
+Choice: Invalid choice.
+
+a) Outbound Flight
+b) Inbound Flight
+c) Quit
+Choice: 
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Empty seats: 24
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number (blank to cancel): Last name (blank to cancel): First name (blank to cancel): Seat 5 assigned.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Empty seats: 1 2 3 4 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat 5: Van Der Berg, Mary Ann
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: Seat number to delete (blank to cancel): Seat 5 assignment deleted.
+
+a) Show number of empty seats
+b) Show list of empty seats
+c) Show alphabetical list of seats
+d) Assign a customer to a seat
+e) Delete a seat assignment
+f) Return to Main Menu
+Choice: 
+a) Outbound Flight
+b) Inbound Flight
+c) Quit
+Choice: Goodbye.

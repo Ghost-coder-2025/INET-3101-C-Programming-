@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/mohamedroble/INET3101/Cassignments/ProgAssg2",
+      "program": "/Users/mohamedroble/INET3101/Cassignments/ProgAssg2/build/Debug/outDebug"
+    }
+  ]
+}
