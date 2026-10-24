@@ -1,0 +1,15 @@
+# Build output
+build/
+*.o
+
+# Runtime data created while testing
+data/*.dat
+data/*.log
+data/*.csv
+data/*.json
+
+# macOS
+.DS_Store
+
+# Debug symbols from clang
+*.dSYM/
