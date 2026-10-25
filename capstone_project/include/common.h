@@ -28,13 +28,23 @@ typedef enum {
     BILL_OK = 0,
     BILL_ERR_INVALID,                /* bad input */
     BILL_ERR_NOT_FOUND,              /* account or meter doesn't exist */
+    BILL_ERR_EXISTS,                 /* it already exists */
     BILL_ERR_IO,                     /* file read or write failed */
     BILL_ERR_NOMEM,                  /* malloc failed */
-    BILL_ERR_LOCK                    /* flock failed */
+    BILL_ERR_LOCK,                   /* flock failed or timed out */
+    BILL_ERR_OVERFLOW,               /* arithmetic would overflow */
+    BILL_ERR_CORRUPT                 /* a saved file failed validation */
 } status_t;
 
 /* Convert between enum values and protocol names like "NET_OUT" */
 const char *resource_to_string(resource_t type);
 status_t    resource_from_string(const char *name, resource_t *out);
+
+/* 1 if the resource is a gauge (STORAGE: billed at its peak in the period),
+   0 if it is a plain running amount (everything else). */
+int resource_is_gauge(resource_t type);
+
+/* Readable text for a result code, for server logs. */
+const char *status_to_string(status_t status);
 
 #endif /* COMMON_H */
