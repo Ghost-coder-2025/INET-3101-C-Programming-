@@ -8,7 +8,7 @@ OBJS = $(patsubst src/%.c,$(BUILD)/%.o,$(SRCS))
 
 .PHONY: all clean
 
-all: $(OBJS)
+all: $(OBJS) $(BUILD)/billing_server $(BUILD)/billing_admin $(BUILD)/billing_client
 
 $(BUILD)/%.o: src/%.c | $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
