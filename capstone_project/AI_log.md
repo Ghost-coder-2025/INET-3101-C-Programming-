@@ -68,3 +68,15 @@ Running record of every AI consultation. One entry per session.
 - **Code changes:** src/ledger.c, tests/test_ledger.c, Makefile (test_ledger rule).
 
 ---
+
+### Entry 4: Implementing the pricing engine (2026-10-25)
+- **Phase:** 6, pricing.c and test_pricing.c
+- **Tool:** Claude, used for implementation help
+- **Prompt:** Asked for pricing.c matching the refactored pricing.h and the rates in specs.md, then a test program using examples I can check by hand.
+- **AI response (summary):** Rates are named constants at the top of the file. CPU and RAM use seconds x rate / 3600 with half-up rounding. Storage rounds down to whole GB and then uses two tiers. Outbound network has a free allowance and then two tiers. Every multiplication that could overflow is checked first and returns BILL_ERR_OVERFLOW. The customer is charged the total rounded half-up to a whole cent, and pricing_format_usd uses snprintf so it never writes past the buffer.
+- **Accepted:** All of it. It implements the review's findings on overflow (4.5) and rounding (4.6).
+- **Rejected / wrong:** Nothing wrong found this time. One caution: the AI wrote both the code and the tests, so they could share the same wrong assumption. To reduce that risk, every expected value in the test is a number I can work out by hand from the rates in specs.md (for example 12,000 MB outbound = 900,000 + 85,000 = 985,000), and the 9-second RAM case is exactly 12.5, so it tests the half-up rule directly.
+- **Results:** tests/test_pricing.c runs 51 checks (storage to GB, CPU and RAM, storage tiers, network, bad input, overflow for four resources, rounding to cents, formatting including the most negative number and a too-small buffer). All pass. The leaks tool reports 0 leaks (188 blocks still in use at exit, none of them leaked).
+- **Code changes:** src/pricing.c, tests/test_pricing.c, Makefile (test_pricing rule).
+
+---

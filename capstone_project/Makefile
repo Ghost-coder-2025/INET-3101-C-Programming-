@@ -40,3 +40,13 @@ $(BUILD)/test_ledger: tests/test_ledger.c $(LEDGER_OBJS) | $(BUILD)
 
 test_ledger: $(BUILD)/test_ledger
 	./$(BUILD)/test_ledger
+
+PRICING_OBJS = $(BUILD)/pricing.o
+
+.PHONY: test_pricing
+
+$(BUILD)/test_pricing: tests/test_pricing.c $(PRICING_OBJS) | $(BUILD)
+	$(CC) $(CFLAGS) $< $(PRICING_OBJS) -o $@ $(LDFLAGS)
+
+test_pricing: $(BUILD)/test_pricing
+	./$(BUILD)/test_pricing
