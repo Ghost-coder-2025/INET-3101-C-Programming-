@@ -80,3 +80,15 @@ Running record of every AI consultation. One entry per session.
 - **Code changes:** src/pricing.c, tests/test_pricing.c, Makefile (test_pricing rule).
 
 ---
+
+### Entry 5: Building invoices with CSV and JSON output (2026-10-25)
+- **Phase:** 7, invoice.c and test_invoice.c
+- **Tool:** Claude, used for implementation help
+- **Prompt:** Asked for invoice.c matching invoice.h, built in three small parts (building the invoice, CSV output, JSON output), then a test program.
+- **AI response (summary):** invoice_build checks its input, gets all five usage totals from one ledger_totals call, prices each with pricing_cost, and checks for overflow before adding each cost to the total. It builds into a local copy and only fills in the caller's invoice once everything has worked, so a failure never leaves a half-filled invoice. The CSV writer outputs one row per resource plus a TOTAL row, quotes the account name, doubles any quote inside it, and puts a ' in front of a leading = + - or @ so spreadsheets don't run it as a formula. The JSON writer escapes quotes, backslashes and control characters in the name, and gives the total both as exact micro-dollars and as a display string rounded to the cent. Every write is checked and returns BILL_ERR_IO on failure.
+- **Accepted:** All of it.
+- **Rejected / wrong:** Nothing wrong found. Two judgment calls: the CSV leaves out generated_at and as_seq to stay one simple table (the JSON includes them), and formula neutralizing only covers the four characters listed in invoice.h. Caution: the test checks each line cost against pricing_cost instead of hand-worked numbers, so it tests that invoices are wired up correctly, not the pricing math itself. The math is covered by the hand-checked values in test_pricing.c (Entry 4). Because the ledger sets timestamps itself, the test uses a period of 0 to INT64_MAX to catch everything and 1 to 2 to catch nothing, instead of exact times.
+- **Results:** tests/test_invoice.c runs 33 checks (CPU summed, storage billed at its peak, inbound free, another account's usage left out, line costs and total, empty period, bad input, CSV header, quoting and TOTAL row, JSON escaping and totals). All pass. The leaks tool reports 0 leaks (188 blocks still in use at exit, none of them leaked).
+- **Code changes:** src/invoice.c, tests/test_invoice.c, Makefile (INVOICE_OBJS and test_invoice rule).
+
+---

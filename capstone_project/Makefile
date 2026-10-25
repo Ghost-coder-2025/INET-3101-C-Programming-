@@ -50,3 +50,13 @@ $(BUILD)/test_pricing: tests/test_pricing.c $(PRICING_OBJS) | $(BUILD)
 
 test_pricing: $(BUILD)/test_pricing
 	./$(BUILD)/test_pricing
+
+INVOICE_OBJS = $(BUILD)/invoice.o $(LEDGER_OBJS) $(PRICING_OBJS)
+
+.PHONY: test_invoice
+
+$(BUILD)/test_invoice: tests/test_invoice.c $(INVOICE_OBJS) | $(BUILD)
+	$(CC) $(CFLAGS) $< $(INVOICE_OBJS) -o $@ $(LDFLAGS)
+
+test_invoice: $(BUILD)/test_invoice
+	./$(BUILD)/test_invoice
