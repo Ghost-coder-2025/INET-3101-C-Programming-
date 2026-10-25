@@ -145,3 +145,16 @@ Running record of every AI consultation. One entry per session.
 - **Code changes:** src/account.c (read_slot validation), src/ledger.c (flock guard and include), src/server.c (_Atomic g_stop).
 
 ---
+
+### Entry 9: Making the CSV invoice reachable (2026-10-25)
+- **Phase:** 11, found while writing the README
+- **Tool:** Claude
+- **Prompt:** Pasted specs.md and AI_log.md and asked for a README that matches the project as it is now.
+- **AI response (summary):** While reading the files it noticed that invoice.c can write CSV, and the tests prove it, but the server's INVOICE command only returns JSON and nothing else calls the CSV writer. A grader looking for "invoice CSV/JSON generation" could not find CSV in the running system. It offered two options: (A) the server also saves a CSV copy when INVOICE runs, or (B) document that CSV is only reachable through the tests. I chose A. It added a function save_csv_copy to server.c that writes data/invoice_<account id>.csv, with one file per account (replaced by the next INVOICE for that account, so a client cannot create unlimited files), guarded by its own mutex that is never held together with another lock. If the CSV cannot be saved, the client still gets the JSON reply and only the server log says so.
+- **Accepted:** Option A and the design above.
+- **Rejected / wrong / missed:** The AI built the CSV writer in Phase 7 and the INVOICE command in Phase 8 without noticing that nothing connected them. It was only found when writing the README. It also found at the same point that data/ is an empty folder, which git does not store, so a fresh clone would have no data/ and the server would fail to start. I added data/.gitkeep. specs.md was also out of date (it still said records are not checked on read, which Phase 10 changed for accounts), so I updated it.
+- **Results:** By hand with nc: INVOICE for account 1 returned the JSON invoice, and data/invoice_1.csv had the same numbers. I checked every line against the rates in specs.md (CPU 7200 s = 80,000; RAM 7200 s = 10,000; storage peak 2048 MB = 2 GB = 46,000; outbound 2000 MB = 1000 billable x 90 = 90,000; total 226,000 = $0.23).
+- **Not tested:** No automated test covers save_csv_copy, the failure path (the file cannot be created), or two clients invoicing the same account at once. This code was added after the Phase 10 audit, so the audit has not seen it.
+- **Code changes:** src/server.c (g_csv_lock, save_csv_copy, one call in do_invoice), specs.md, data/.gitkeep.
+
+---

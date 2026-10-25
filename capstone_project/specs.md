@@ -49,8 +49,9 @@ are created when an account is created.
 The ledger is the source of truth. A meter is only a cached total used to
 answer TOTAL quickly, and meters are rebuilt from the ledger at startup.
 
-Records are zeroed before they are written to disk. Checking each record on
-read is not done in this version (a known limit, listed in the README).
+Records are zeroed before they are written to disk. Account records are checked when read (the id must match the slot, the
+deleted flag must be 0 or 1, and the name must have an end). Meter records
+are not checked on read (a known limit, listed in the README).
 
 ## 5. TCP protocol
 Text, one command per line ending in \n. Port 9090. A line may have at most
@@ -75,6 +76,10 @@ then exactly <length> bytes of JSON (the invoice from section 3). The
 client reads the length first, so it knows where the JSON ends. The server
 builds the JSON in memory before sending, so the length is always exact.
 A deleted account can still be invoiced.
+Each INVOICE also saves a CSV copy of the invoice as
+data/invoice_<account id>.csv (one file per account, replaced by the next
+INVOICE for that account). If the CSV cannot be saved, the JSON reply is
+still sent.
 
 Parsing rules, checked in this order:
 1. The command word must be USAGE, TOTAL, INVOICE or QUIT (bad_command).
@@ -122,6 +127,8 @@ receive new usage, but can still be invoiced.
   ignored; a bad line anywhere else is reported as corruption.
 - A ledger append is only reported as successful after it is written and
   flushed to disk. On failure, nothing changes and no sequence number is used.
+- The ledger file is locked with flock while it is open, so a second server
+  cannot open it and trim an entry the first one already saved.
 
 ## 8. Concurrency
 - One pthread per client connection, with a connection limit, a receive

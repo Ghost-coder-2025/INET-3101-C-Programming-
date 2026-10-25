@@ -152,6 +152,39 @@ static int reply_ok(int fd, int64_t value)
     return send_all(fd, out, strlen(out));
 }
 
+/* One CSV file per account, so the number of files is bounded by the number
+   of accounts. The lock keeps two INVOICE commands for the same account from
+   writing the same file at the same moment. It is taken alone: no other lock
+   is held while it is held. */
+static pthread_mutex_t g_csv_lock = PTHREAD_MUTEX_INITIALIZER;
+
+/* Save a CSV copy of the invoice as data/invoice_<account id>.csv. The next
+   INVOICE for the same account replaces it. The CSV is an extra: if saving
+   it fails, the client still gets the JSON reply, and only the server log
+   mentions the problem. */
+static void save_csv_copy(const invoice_t *inv)
+{
+    char  path[64];
+    FILE *fp;
+
+    snprintf(path, sizeof(path), "data/invoice_%u.csv",
+             (unsigned)inv->account_id);
+
+    pthread_mutex_lock(&g_csv_lock);
+
+    fp = fopen(path, "w");
+    if (fp == NULL) {
+        fprintf(stderr, "server: could not create %s\n", path);
+    } else {
+        if (invoice_write_csv(inv, fp) != BILL_OK)
+            fprintf(stderr, "server: could not write %s\n", path);
+        if (fclose(fp) != 0)
+            fprintf(stderr, "server: could not finish writing %s\n", path);
+    }
+
+    pthread_mutex_unlock(&g_csv_lock);
+}
+
 /* USAGE: one lock at a time, in this order: account, ledger, meter. */
 static int do_usage(int fd, const command_t *cmd)
 {
@@ -221,6 +254,8 @@ static int do_invoice(int fd, const command_t *cmd)
                        cmd->from, cmd->to, &inv);
     if (st != BILL_OK)
         return reply_err(fd, protocol_error_from_status(st));
+
+    save_csv_copy(&inv);
 
     /* Write the JSON into memory first, so we know its length
        before sending anything */
