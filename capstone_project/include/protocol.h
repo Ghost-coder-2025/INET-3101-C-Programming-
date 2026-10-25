@@ -5,20 +5,24 @@
 #include <stdint.h>
 #include "common.h"
 
-/* The three commands a client can send. */
+/* The four commands a client can send. */
 typedef enum {
     CMD_USAGE,                       /* USAGE <account_id> <TYPE> <quantity> */
     CMD_TOTAL,                       /* TOTAL <account_id> <TYPE> */
+    CMD_INVOICE,                     /* INVOICE <account_id> <from> <to> */
     CMD_QUIT                         /* QUIT */
 } command_kind_t;
 
 /* A parsed command. Which fields are filled in depends on kind:
-   USAGE uses all of them, TOTAL ignores quantity, QUIT uses none. */
+   USAGE uses account_id, type and quantity; TOTAL uses account_id and type;
+   INVOICE uses account_id, from and to; QUIT uses none. */
 typedef struct {
     command_kind_t kind;
     uint32_t       account_id;
     resource_t     type;
     int64_t        quantity;
+    int64_t        from;             /* INVOICE: period start, included */
+    int64_t        to;               /* INVOICE: period end, not included */
 } command_t;
 
 /* The error reasons a client can see. These match the text after "ERR ".
@@ -74,15 +78,20 @@ read_line_result_t conn_reader_read_line(conn_reader_t *reader, char *buf,
 /* Parse one line (without the newline) into *out. Returns PROTO_OK or the
    reason the line was rejected. Never modifies line and never reads past its
    '\0'. Rules, checked in this order:
-     1. The command word must be USAGE, TOTAL or QUIT, else BAD_COMMAND.
+     1. The command word must be USAGE, TOTAL, INVOICE or QUIT,
+        else BAD_COMMAND.
      2. Words are separated by exactly one space, and there must be exactly
-        the right number of them (USAGE 4, TOTAL 3, QUIT 1), else BAD_COMMAND.
-        Any '\r' or other control character gives BAD_COMMAND.
+        the right number of them (USAGE 4, TOTAL 3, INVOICE 4, QUIT 1),
+        else BAD_COMMAND. Any '\r' or other control character gives
+        BAD_COMMAND.
      3. The account id must be digits only, from 1 to 4294967295,
         else BAD_COMMAND.
-     4. The type must match one of the five names exactly, else BAD_TYPE.
+     4. The type (USAGE and TOTAL) must match one of the five names exactly,
+        else BAD_TYPE.
      5. The quantity (USAGE only) must be digits only, from 1 to
         MAX_QUANTITY, else BAD_QUANTITY. Zero is not valid.
+     6. from and to (INVOICE only) must be digits only, from 0 to INT64_MAX,
+        and from must be less than to, else BAD_COMMAND.
    So "USAGE 99 BOGUS -5" is rejected as BAD_TYPE. Whether the account
    exists is the server's job, after parsing. */
 proto_error_t protocol_parse(const char *line, command_t *out);
@@ -99,7 +108,9 @@ proto_error_t protocol_parse(const char *line, command_t *out);
 proto_error_t protocol_error_from_status(status_t status);
 
 /* Build a reply line like "OK 250\n" into buf. At most buflen bytes are
-   written, always ending with '\0'. */
+   written, always ending with '\0'. For INVOICE, value is the length in
+   bytes of the JSON that follows the line; the client then reads exactly
+   that many bytes. */
 void protocol_reply_ok(char *buf, size_t buflen, int64_t value);
 
 /* Build the reply to QUIT: "OK bye\n". */

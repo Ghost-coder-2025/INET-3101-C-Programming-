@@ -60,3 +60,13 @@ $(BUILD)/test_invoice: tests/test_invoice.c $(INVOICE_OBJS) | $(BUILD)
 
 test_invoice: $(BUILD)/test_invoice
 	./$(BUILD)/test_invoice
+
+PROTOCOL_OBJS = $(BUILD)/protocol.o $(BUILD)/common.o
+
+.PHONY: test_protocol
+
+$(BUILD)/test_protocol: tests/test_protocol.c $(PROTOCOL_OBJS) | $(BUILD)
+	$(CC) $(CFLAGS) $< $(PROTOCOL_OBJS) -o $@ $(LDFLAGS)
+
+test_protocol: $(BUILD)/test_protocol
+	./$(BUILD)/test_protocol
