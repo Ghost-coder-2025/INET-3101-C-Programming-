@@ -49,8 +49,8 @@ are created when an account is created.
 The ledger is the source of truth. A meter is only a cached total used to
 answer TOTAL quickly, and meters are rebuilt from the ledger at startup.
 
-Records are zeroed before they are written, and validated after they are
-read (flags are 0 or 1, type is valid, name ends with a NUL byte).
+Records are zeroed before they are written to disk. Checking each record on
+read is not done in this version (a known limit, listed in the README).
 
 ## 5. TCP protocol
 Text, one command per line ending in \n. One reply line per command.
