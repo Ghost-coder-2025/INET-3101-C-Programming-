@@ -463,6 +463,7 @@ int main(void)
         timeout.tv_sec  = RECV_TIMEOUT_SEC;
         timeout.tv_usec = 0;
         setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+        setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 
         start_client(client_fd);
     }

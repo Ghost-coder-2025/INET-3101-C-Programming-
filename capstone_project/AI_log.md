@@ -104,3 +104,18 @@ Running record of every AI consultation. One entry per session.
 - **Code changes:** include/protocol.h (INVOICE command), src/protocol.c, src/server.c, src/admin.c, tests/test_protocol.c, Makefile (test_protocol, server and admin rules), specs.md (INVOICE, programs section, decisions made).
 
 ---
+
+### Entry 7: Hardening review of server.c (2026-10-25)
+- **Phase:** 9, concurrency and error hardening
+- **Tool:** Claude
+- **Prompt:** Pasted server.c and asked for a review against the hardening checklist from specs.md section 7: connection limit, receive timeout, SIGPIPE, clean shutdown, cleanup on every path, and one lock at a time.
+- **AI response (summary):** All six items were already covered in the Phase 8 code: 16 client slots with ERR busy when full, a 30 second receive timeout, SIGPIPE ignored, shutdown that closes each client socket and waits for the active thread count to reach 0 before freeing the ledger, sockets and buffers freed on every path, and USAGE taking the account, ledger and meter locks one after another and never together.
+- **Accepted:**
+  - Add a send timeout (SO_SNDTIMEO) next to the receive timeout, because a client that never reads its replies could otherwise block a server thread in send() and fill all 16 slots. Applied, and the server builds with no warnings.
+- **Not fixed (known limits for the README):**
+  - A client that sends one byte every 29 seconds restarts the receive timeout each time and can hold a thread. Fixing it needs a total time limit per line.
+  - The server opens the ledger before it binds the port, so a second server started by accident could trim the ledger tail before its bind fails. Binding first would fix it.
+- **Rejected / wrong:** Nothing wrong found. This review was done by reading the code. It was not tested under load with many concurrent clients, so the concurrency claims are unproven until the Phase 10 audit. The send timeout change was only compiled, not exercised.
+- **Code changes:** src/server.c (one added setsockopt line).
+
+---
