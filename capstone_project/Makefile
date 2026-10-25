@@ -70,3 +70,21 @@ $(BUILD)/test_protocol: tests/test_protocol.c $(PROTOCOL_OBJS) | $(BUILD)
 
 test_protocol: $(BUILD)/test_protocol
 	./$(BUILD)/test_protocol
+
+SERVER_OBJS = $(BUILD)/server.o $(BUILD)/common.o $(BUILD)/account.o $(BUILD)/meter.o $(BUILD)/ledger.o $(BUILD)/pricing.o $(BUILD)/invoice.o $(BUILD)/protocol.o
+
+.PHONY: server
+
+$(BUILD)/billing_server: $(SERVER_OBJS) | $(BUILD)
+	$(CC) $(CFLAGS) $(SERVER_OBJS) -o $@ $(LDFLAGS)
+
+server: $(BUILD)/billing_server
+
+ADMIN_OBJS = $(BUILD)/admin.o $(BUILD)/common.o $(BUILD)/account.o $(BUILD)/meter.o
+
+.PHONY: admin
+
+$(BUILD)/billing_admin: $(ADMIN_OBJS) | $(BUILD)
+	$(CC) $(CFLAGS) $(ADMIN_OBJS) -o $@ $(LDFLAGS)
+
+admin: $(BUILD)/billing_admin

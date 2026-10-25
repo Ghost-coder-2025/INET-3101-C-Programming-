@@ -53,39 +53,67 @@ Records are zeroed before they are written to disk. Checking each record on
 read is not done in this version (a known limit, listed in the README).
 
 ## 5. TCP protocol
-Text, one command per line ending in \n. One reply line per command.
-Port 9090. A line may have at most 255 characters, not counting the \n.
+Text, one command per line ending in \n. Port 9090. A line may have at most
+255 characters, not counting the \n.
 
-| Command                          | Meaning                              |
-|----------------------------------|--------------------------------------|
-| USAGE <account_id> <TYPE> <qty>  | Record one usage event               |
-| TOTAL <account_id> <TYPE>        | Running total for one resource       |
-| QUIT                             | Close the connection                 |
+| Command                              | Meaning                              |
+|--------------------------------------|--------------------------------------|
+| USAGE <account_id> <TYPE> <qty>      | Record one usage event               |
+| TOTAL <account_id> <TYPE>            | Running total for one resource       |
+| INVOICE <account_id> <from> <to>     | Invoice for the period [from, to)    |
+| QUIT                                 | Close the connection                 |
 
 Valid TYPE values: COMPUTE_CPU, COMPUTE_RAM, STORAGE, NET_IN, NET_OUT.
+from and to are Unix timestamps (seconds since 1970).
 
 Replies: `OK <value>` on success (USAGE returns the sequence number, TOTAL
 returns the total), or `ERR <reason>`: unknown_account, bad_type,
 bad_quantity, bad_command, line_too_long, busy, internal.
 
+INVOICE is the only multi-line reply. The server sends `OK <length>`,
+then exactly <length> bytes of JSON (the invoice from section 3). The
+client reads the length first, so it knows where the JSON ends. The server
+builds the JSON in memory before sending, so the length is always exact.
+A deleted account can still be invoiced.
+
 Parsing rules, checked in this order:
-1. The command word must be USAGE, TOTAL or QUIT (bad_command).
+1. The command word must be USAGE, TOTAL, INVOICE or QUIT (bad_command).
 2. Words are separated by exactly one space, with the right number of
-   words; a \r or other control character is rejected (bad_command).
+   words (USAGE 4, TOTAL 3, INVOICE 4, QUIT 1); a \r or other control
+   character is rejected (bad_command).
 3. The account id is digits only, 1 to 4294967295 (bad_command).
-4. The type matches one of the five names exactly (bad_type).
+4. For USAGE and TOTAL, the type matches one of the five names exactly
+   (bad_type).
 5. For USAGE, the quantity is digits only, 1 to 1,000,000,000 (bad_quantity).
+6. For INVOICE, from and to are digits only, 0 to INT64_MAX, and from must
+   be less than to (bad_command).
 Whether the account exists is checked by the server after parsing.
 
 TCP is a byte stream, so a per-connection reader collects bytes into whole
 lines. A line that is too long is rejected and the rest of it is discarded.
 A line containing a NUL byte is rejected.
 
-The server assigns timestamps. Accounts are created and deleted by a local
-admin program, not over the network. A deleted account cannot receive new
-usage, but can still be invoiced.
+The server assigns timestamps.
 
-## 6. Files on disk (data/ folder)
+## 6. Programs
+**billing_server** (src/server.c): opens the stores and the ledger, rebuilds
+all meters from the ledger, then listens on 127.0.0.1:9090 only (there is
+no authentication, so it is not reachable from other machines). One thread
+per client, at most 16 at once; a 17th client gets `ERR busy` and is
+disconnected. A client that sends nothing for 30 seconds is disconnected.
+If a USAGE event is saved to the ledger but the meter update then fails,
+the client still gets OK (the event is saved, and replying with an error
+would make the client retry and double-count); the meter is corrected at
+the next startup.
+
+**billing_admin** (src/admin.c): the local admin program. Accounts are
+created and deleted here, not over the network:
+`billing_admin create <name>`, `list`, `rename <id> <name>`, `delete <id>`.
+Create also creates the account's five meters. It can run while the server
+is running (flock coordinates the two processes). A deleted account cannot
+receive new usage, but can still be invoiced.
+
+## 7. Files on disk (data/ folder)
 - accounts.dat and meters.dat: fixed-size binary records, full CRUD with
   fopen/fseek/fread/fwrite. Delete sets the deleted flag.
 - ledger.log: text, one line per event, append-only:
@@ -95,7 +123,7 @@ usage, but can still be invoiced.
 - A ledger append is only reported as successful after it is written and
   flushed to disk. On failure, nothing changes and no sequence number is used.
 
-## 7. Concurrency
+## 8. Concurrency
 - One pthread per client connection, with a connection limit, a receive
   timeout, and no unbounded threads.
 - Each store (accounts, meters) and the ledger owns its own mutex, which
@@ -105,15 +133,19 @@ usage, but can still be invoiced.
   write.
 - A thread never holds two locks at once. For USAGE: look up the account,
   release; append to the ledger, release; update the meter, release.
-- SIGPIPE is ignored, and the server shuts down cleanly (no thread is inside
-  the ledger when it is destroyed).
+- SIGPIPE is ignored, and the server shuts down cleanly on Ctrl+C or
+  SIGTERM: it stops accepting, wakes every client thread, waits until all
+  of them have finished, and only then destroys the ledger.
 
-## 8. Known limits (for the README)
+## 9. Known limits (for the README)
 No authentication; retries after a dropped connection can double-count
 usage; rates are fixed in code, so changing a price would re-price history;
 no ledger rotation or adjustment entries; storage is billed at peak, not as
-a time-weighted average.
+a time-weighted average. A client that keeps sending bytes with no newline
+keeps one connection busy (nothing overflows, and extra bytes are thrown
+away). TOTAL for STORAGE is the all-time peak, not the peak in a period.
 
-## 9. Open items
-- How an invoice is triggered (a server command or the admin program).
-  To be decided in Phase 7.
+## 10. Decisions made
+- Invoices are triggered by the INVOICE server command (Phase 8), not by
+  the admin program, so the server stays the only process that reads usage
+  for billing.
