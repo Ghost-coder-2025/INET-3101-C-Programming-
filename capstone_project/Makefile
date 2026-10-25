@@ -30,3 +30,13 @@ $(BUILD)/test_stores: tests/test_stores.c $(TEST_OBJS) | $(BUILD)
 
 test: $(BUILD)/test_stores
 	./$(BUILD)/test_stores
+
+LEDGER_OBJS = $(BUILD)/common.o $(BUILD)/ledger.o
+
+.PHONY: test_ledger
+
+$(BUILD)/test_ledger: tests/test_ledger.c $(LEDGER_OBJS) | $(BUILD)
+	$(CC) $(CFLAGS) $< $(LEDGER_OBJS) -o $@ $(LDFLAGS)
+
+test_ledger: $(BUILD)/test_ledger
+	./$(BUILD)/test_ledger
