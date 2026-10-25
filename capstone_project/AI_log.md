@@ -49,7 +49,7 @@ Running record of every AI consultation. One entry per session.
   - The first account.c was too complex for me to understand and explain, so I had it rewritten without the lock retry loop, per-record validation, and failed-create cleanup. These go in the README Pros and Cons as known limits. I kept the locking and input checks because the rubric requires them.
   - AddressSanitizer was suggested for the memory audit, but the ASan build hung at startup on my Mac (macOS 26.5, Apple clang 17, arm64) before any test output. The same code passed in a normal build. I did not find the cause, so I used Apple's leaks tool instead.
 - **Results:** tests/test_stores.c runs 28 checks (CRUD for accounts and meters, bad input, storage peak, overflow, data surviving a restart) and all pass. The leaks tool reports 0 leaks (188 blocks still in use at exit, none of them leaked).
-- **Still to do:** Run ASan or Valgrind on CSELabs Linux for overflow and use-after-free checks.
+- **Not done:** I did not run ASan or Valgrind. ASan hangs on my Mac and I did not try another machine. See Entry 8.
 - **Code changes:** src/common.c, src/account.c, src/meter.c, tests/test_stores.c, Makefile.
 
 ---
@@ -64,7 +64,7 @@ Running record of every AI consultation. One entry per session.
   - The AI described the leaks tool output incorrectly. It said "188 allocations, all freed", but the 188 blocks are ones still in use at exit, mostly from the C runtime, and the identical number for two different test programs showed this. The 0 leaks result was right, only the description was wrong. I had it corrected in Entry 2.
   - The ledger's overflow check (a total too big for 64 bits) cannot be tested without billions of entries. The same idea is tested in the meter tests, and I am listing this as untested in the README.
 - **Results:** tests/test_ledger.c runs 30 checks (appending, bad input, totals, storage peak, time periods, callback re-entry, restart, half-written last line, garbage line, gap in numbers). All pass. The leaks tool reports 0 leaks.
-- **Still to do:** Run ASan or Valgrind on CSELabs Linux for overflow and use-after-free checks, since ASan hangs on my Mac.
+- **Not done:** I did not run ASan or Valgrind. ASan hangs on my Mac and I did not try another machine. See Entry 8.
 - **Code changes:** src/ledger.c, tests/test_ledger.c, Makefile (test_ledger rule).
 
 ---
