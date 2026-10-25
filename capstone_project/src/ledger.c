@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/file.h>
 #include <time.h>
 #include <unistd.h>
 #include "ledger.h"
@@ -127,6 +128,14 @@ status_t ledger_create(const char *log_path, ledger_t **out)
     if (ledger->fp == NULL) {
         free(ledger);
         return BILL_ERR_IO;
+    }
+
+    /* Only one process may use the ledger. A second server must be refused
+       before load_log trims the file. The lock is released when the file closes. */
+    if (flock(fileno(ledger->fp), LOCK_EX | LOCK_NB) != 0) {
+        fclose(ledger->fp);
+        free(ledger);
+        return BILL_ERR_LOCK;
     }
 
     status_t st = load_log(ledger);

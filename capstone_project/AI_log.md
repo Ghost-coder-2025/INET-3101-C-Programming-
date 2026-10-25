@@ -119,3 +119,29 @@ Running record of every AI consultation. One entry per session.
 - **Code changes:** src/server.c (one added setsockopt line).
 
 ---
+
+### Entry 8: Concurrency and leak audit of the finished code (2026-10-25)
+- **Phase:** 10, AI audit #2
+- **Tool:** a separate fresh AI chat with no prior project context (full answer saved in ai_review_2.md)
+- **Prompt:**
+  > You are a senior C systems engineer doing a reliability and security audit. I'm a student building a "Cloud Services Billing Engine" in C for a class capstone. It is a TCP server (one pthread per client, up to 16 clients) that speaks a line-based text protocol, with file-backed stores (fixed-size binary records using stdio, flock and a mutex per store) and an append-only text ledger. It runs on macOS. The finished code is below: all the headers, then the implementation files.
+  > Please audit it for: (1) race conditions and data races, between threads and between processes; (2) deadlock and lock-ordering risks; (3) buffer overflows, off-by-one errors, integer overflow or truncation, unsafe string handling, format-string problems; (4) memory leaks, double frees, use-after-free, and file descriptor or socket leaks on every error path, including shutdown; (5) file persistence problems: crash safety, partial writes, torn records, stale reads; (6) anything a malicious or broken client could do to crash, hang, or exhaust the server.
+  > For each issue, give the file and function, a severity, a concrete scenario or input, and a suggested fix. Briefly list what you checked and found correct in each area. If you are unsure, say so rather than inventing an issue. Do not rewrite the files.
+  Files sent: all headers, server.c, client.c, protocol.c, ledger.c, account.c, meter.c, invoice.c. I left out pricing.c, common.c and admin.c.
+- **AI response (summary):** About 18 findings and a long list of things it checked and found correct (locks, buffers, leaks on every error path, shutdown, the parser). It found no way for a client to crash the server. One high, six medium, eleven low. It marked findings 1 and 7 as depending on what admin.c does, since it had not seen it.
+- **Accepted and fixed:**
+  - #6: a damaged account record whose name has no end could make invoice_build read past the 64-byte name. I had removed record validation from account.c when I simplified it (Entry 2), so this restores the check: the stored id must match the slot, the deleted flag must be 0 or 1, and the name must have an end. A bad record returns BILL_ERR_CORRUPT.
+  - #1: ledger_create now takes an exclusive flock on the ledger file before loading it, so a second server (or any other process) cannot open it and trim an entry the first one already acknowledged. This also closes the second-server gap I noted in Entry 7.
+  - #14: g_stop is now _Atomic sig_atomic_t, because client threads read a flag that a signal handler writes.
+- **Checked and resolved:** #7 (missing meters) and the admin part of #1 depended on admin.c. I checked it with grep: admin.c creates the five meters with each account (line 76) and never touches the ledger, so neither can happen through the admin program. At the next server start, rebuild_meters creates any meter that is missing.
+- **Not fixed (known limits for the README):** slow client holds a slot (#2); blocking flock with no timeout (#3, this is the retry loop dropped in Entry 2); disk-full during a ledger append could duplicate an entry number (#4); account file not fsynced and macOS needs F_FULLFSYNC (#5); linear ledger scans under the lock (#8); delete racing with usage (#9); a retry after a crash can double-bill (#10); loose ledger line parsing, zero-filled tail after a crash, and torn account records on power loss (#11, #12, #13); ignored setsockopt results and an accept spin on file descriptor exhaustion (#15); CSV leading tab or carriage return, JSON 0x7f (#16); a cosmetic error code (#17); meter slot cross-check and a very large sparse file from a huge account id (#18).
+- **Rejected / wrong / missed:**
+  - The AI marked #4 and #12 as unverified itself, so I am listing them as unconfirmed.
+  - It could not review common.c, pricing.c or admin.c because I did not send them. That was my choice, so those files have had no AI audit.
+  - It did not name the bind-before-ledger startup ordering from Entry 7 directly. It described the same damage through the admin program instead.
+  - It re-found three limits I already knew about (slow client, retry double-billing, linear scans) without being told, which gives some confidence in the review.
+- **Results:** make test (28 checks) and make test_ledger (30 checks) still pass after the changes, and the server builds with no warnings. By hand: a second server was refused with "startup failed (lock failed or timed out)" while the first was running, and Ctrl+C stopped the first one cleanly.
+- **Not tested:** There is no automated test for the corrupt-record check or the ledger lock. ASan hangs at startup on my Mac (Entry 2), and I did not run Valgrind. The leaks tool was only run on the test programs, not on the running server, so the server's leak-freedom rests on the audit's code reading.
+- **Code changes:** src/account.c (read_slot validation), src/ledger.c (flock guard and include), src/server.c (_Atomic g_stop).
+
+---

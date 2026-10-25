@@ -45,6 +45,9 @@ static status_t read_slot(FILE *fp, uint32_t id, account_t *out)
         return BILL_ERR_IO;
     if (fread(out, sizeof *out, 1, fp) != 1)
         return BILL_ERR_NOT_FOUND;       /* past the end of the file */
+    if (out->id != id || out->deleted > 1 ||
+        memchr(out->name, 0, MAX_NAME_LEN) == NULL)
+        return BILL_ERR_CORRUPT;         /* a damaged record */
     return BILL_OK;
 }
 

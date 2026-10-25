@@ -30,7 +30,7 @@ static meter_store_t   *g_meters   = NULL;
 static ledger_t        *g_ledger   = NULL;
 
 /* Set to 1 by Ctrl+C (SIGINT) or SIGTERM. */
-static volatile sig_atomic_t g_stop = 0;
+static _Atomic sig_atomic_t g_stop = 0;
 
 /* Client slots: the socket of each connected client, or -1 if free.
    g_active counts the running client threads. All three are protected
