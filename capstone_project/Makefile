@@ -88,3 +88,12 @@ $(BUILD)/billing_admin: $(ADMIN_OBJS) | $(BUILD)
 	$(CC) $(CFLAGS) $(ADMIN_OBJS) -o $@ $(LDFLAGS)
 
 admin: $(BUILD)/billing_admin
+
+CLIENT_OBJS = $(BUILD)/client.o $(BUILD)/common.o
+
+.PHONY: client
+
+$(BUILD)/billing_client: $(CLIENT_OBJS) | $(BUILD)
+	$(CC) $(CFLAGS) $(CLIENT_OBJS) -o $@ $(LDFLAGS)
+
+client: $(BUILD)/billing_client
