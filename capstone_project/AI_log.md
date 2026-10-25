@@ -35,6 +35,6 @@ Running record of every AI consultation. One entry per session.
   - It suggested removing meter_create, which would weaken the visible Meter CRUD. I am keeping it.
   - It did not weigh scope. Authentication, idempotency, rate-card versioning, log rotation and adjustment entries are too large for this project, so they go in the README Pros and Cons as known limits.
 - **What it found that I had not told it:** the billing period gap and the STORAGE ambiguity, both of which I had noticed myself.
-- **Code changes:** (to be filled in after the header refactor)
+- **Code changes:** Rewrote all seven headers. common.h: new error codes, resource_is_gauge, status_to_string. account.h and meter.h: open stores instead of file paths, account_read_any, account_for_each, meter_apply_usage, meter_set_total. ledger.h: ledger_totals and ledger_current_totals with billing periods, ledger_for_each now copies entries before calling the callback. invoice.h: period, as_seq, account name passed in. pricing.h: overflow error, half-up rounding, pricing_round_to_cents. protocol.h: conn_reader_t line reader, busy and internal errors, parsing rules. Rewrote specs.md to match. All headers compile clean with the strict flags.
 
 ---
